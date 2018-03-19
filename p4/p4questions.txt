@@ -1,0 +1,111 @@
+Name: Zhongwei Wang
+Section: Lec 1
+
+Do not remove the questions from this file.
+Please write and indent your answers in this file.
+
+For all cache simulations, use a capacity of 16384 bytes, and set associativity of 1, for both 
+the I-cache and the D-cache.
+
+Sample command line:
+pin-fw/pin -injection child -t pin-fw/source/tools/Memory/obj-ia32/allcache.so -is 16384 -ia 1 -ib 64 -ds 16384 -da 1 -db <block-size> -- <yourexe>
+
+-------
+cache1D
+-------
+
+1.1 What do you get from running pin with a block size of 4 bytes?
+
+	Data cache misses:		108533
+	Data cache references:		643202
+
+
+1.2 Calculate the hit ratio for the D-cache with a block size of 4 bytes?
+	83.13%
+
+2.1 What do you get from running pin with a block size of 32 bytes?
+
+	Data cache misses:		15408
+	Data cache references:		643202
+
+2.2 Calculate the hit ratio for the D-cache with a block size of 32 bytes?
+	97.60%
+
+3.1 What do you get from running pin with a block size of 64 bytes?
+
+	Data cache misses: 8904
+	Data cache references: 643202
+
+3.2 Calculate the hit ratio for the D-cache with a block size of 64 bytes?
+	98.62%
+
+4. For this question, assume that the 100,000 element integer array that you allocated starts at address 0x50000000 in memory, the size of an integer is 4 bytes and the D-cache is initially empty. As you read the integers in the array one-by-one, starting at index 0, how many D-cache misses will you see for reading the first 40 integers when the cache block size is (to be answered without running pin):
+
+a) 4 bytes:
+	Data cache misses: 40
+	Data cache references: 40
+	hit ratio for the D-cache: 0%
+
+b) 32 bytes:
+	Data cache misses: 5
+	Data cache references: 40
+	hit ratio for the D-cache: 87.5%
+
+c) 64 bytes:
+	Data cache misses: 3
+	Data cache references: 40
+	hit ratio for the D-cache: 92.5%
+
+5. For this program, which block size is best? Why? What is the relationship between the blocksize and hit ratio? Why?
+	The 64 bytes block size is the best.This is because the block size will affect the size of offsets for the b bits, which starts from the least important bit. And we know the array is holding integers, which means that they address will change by 4. So in binary, the last 2 bits will not change. All the changes starts from the 3rd bits counting from the right. So before we use out the capacity for each block size, putting more elements into the same set will help the cache to increase hit ratio after the first miss.
+	Once we use out the capacity of each block size, for example, block size = 32 bytes, and since it is a direct map, one block size for each single set can only hold 8 integer elements in the array. Thus, visiting at most every 8 elements will lead to a miss. Similiar to 4 bytes and 64 bytes, the hit rate is at least that big.
+	If the starting addr for array[0] is something like 0x...0000, there is an easy way to calculate out the total miss numbers: First we calculate the capacity of block size to hold how many elements in the array simultaneously. The Block size divides by the int size. Then, we divide the total visit number of elements, ie 40 in this case by the capacity number.
+	For more detail, a miss table for 32 bytes and 64 bytes block size is provided below.
+	x00	32:	miss	64:	miss
+	x20		miss		hit
+	x40		miss		miss
+	x60		miss		hit
+	x80		miss		miss
+
+-----------
+cache2Drows
+-----------
+
+6.1 What do you get from running pin with a block size of 64 bytes?
+
+	Data cache misses: 106591
+	Data cache references: 12058203
+
+6.2 Calculate the hit ratio for the D-cache with a block size of 64 bytes?
+	99.12%
+
+-----------
+cache2Dcols
+-----------
+
+7.1 What do you get from running pin with a block size of 64 bytes?
+
+	Data cache misses: 1507346
+	Data cache references: 12045703
+
+7.2 Calculate the hit ratio for the D-cache with a block size of 64 bytes?
+	87.49%
+
+--------------------------------------
+Comparing cache2Drows with cache2Dcols
+--------------------------------------
+
+8. For this question, assume that the 2-D integer array you allocated starts at address 0x40000000 in memory, the size of an integer is 4 bytes, D-cache block size is 64 bytes and the D-cache is initially empty. As you read the integers in the 2-D array one-by-one, starting with element array[0,0], how many D-cache misses will you see for reading the first 10 integers in case of (to be answered without running pin):
+
+a) cache2Drows:
+	Data cache misses: 1
+	Data cache references: 10
+	hit ratio for the D-cache: 90%
+
+b) cache2Dcols:
+	Data cache misses: 10
+	Data cache references: 10
+	hit ratio for the D-cache: 0%
+
+9. Compare the performance (hit ratio) of the D-cache for the 2 programs. Briefly explain what you observe.
+	As we can see, assuming the array is row major ordered, the hit ratio differs a lot between the 2Drows and 2Dcols. To be more specific, access the 2d array with a good stride helps a lot from the prespective of cache. If the stride is too big, machine cannot use the spatial locality and thus leading to a poor hit ratio. For example, if the cols are too big so that the total access one column of elements will use out the capacity of all cache blocks several times, when the first col is done and shift to the second col, all the cache will be reset again, since the s bits match the element into some set, but tag is different. Then the hit ratio will be very poor.
